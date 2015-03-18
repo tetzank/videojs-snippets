@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+
+	<title>Video.js | HTML5 Video Player</title>
+
+	<!-- Chang URLs to wherever Video.js files will be hosted -->
+	<link href="video-js.min.css" rel="stylesheet" type="text/css">
+	<!-- video.js must be in the <head> for older IEs to work. -->
+	<script src="video.js"></script>
+
+	<!-- Unless using the CDN hosted version, update the URL to the Flash SWF -->
+	<script>
+		videojs.options.flash.swf = "video-js.swf";
+	</script>
+	
+	<script src="videojs-shortcuts.js"></script>
+	<link rel="stylesheet" href="videojs-shortcuts.css" type="text/css" />
+
+	<style type="text/css">
+		#terminal {
+			background: #fff;
+			color: #000;
+			font-family: "Lucida Console", "Lucida Sans Typewriter", Monaco, "Bitstream Vera Sans Mono", monospace;
+			font-weight: lighter;
+			border: solid 1px;
+			padding: 10px;
+			margin-top: 35px;
+		}
+		.terminal-top-bar {
+			background: rgb(233, 233, 233);
+			height: 14px;
+			font-size: 12px;
+			line-height: 14px;
+			margin-top: -30px;
+			margin-left: -11px;
+			margin-right: -11px;
+			padding: 3px;
+			text-align: center;
+			color: rgb(92, 92, 92);
+			border: solid 1px;
+			border-radius: 2px 2px 0 0;
+		}
+		.terminal-header {
+			padding-top: 15px;
+		}
+		#input {
+			width: 80%;
+			padding: 4px;
+		}
+		#run {
+			width: 15%
+		}
+		#output {
+			white-space: pre-wrap;
+			word-break: break-all;
+		}
+		#output.closed {
+			max-height: 200px;
+			overflow-y: scroll;
+		}
+		#files {
+			text-align: center;
+		}
+		#files img {
+			max-width: 80%;
+		}
+		.sample-commands {
+			text-align: center;
+		}
+	</style>
+</head>
+<body>
+
+<p>Choose mp4 file:</p>
+<input type="file" id="fileinput" name="fileinput[]" accept="video/mp4" />
+
+<hr/>
+
+<video id="video" class="video-js vjs-default-skin vjs-big-play-centered" controls="controls" preload="auto" width="640" height="480">
+	<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
+</video>
+
+<hr/>
+
+<div id="terminal">
+	<div class="terminal-top-bar">
+		videoconverter.js
+	</div>
+	<div class="terminal-header">
+		<input id="input" value="-help" />
+		<button id="run" class="plain-button">Run Command</button>
+		<img id="image-loader" src="load.gif" />
+	</div>
+	<pre id="output">Loading JavaScript files (it may take a minute)</pre>
+</div>
+
+<div id="files"></div>
+
+
+<script>
+
+var worker;
+var outputElement;
+var filesElement;
+var running = false;
+var isWorkerLoaded = false;
+
+function isReady() {
+  return !running && isWorkerLoaded;
+}
+
+function startRunning() {
+  document.querySelector("#image-loader").style.visibility = "visible";
+  outputElement.className = "";
+  filesElement.innerHTML = "";
+  running = true;
+}
+function stopRunning() {
+  document.querySelector("#image-loader").style.visibility = "hidden";
+  running = false;
+}
+
+function parseArguments(text) {
+  text = text.replace(/\s+/g, ' ');
+  var args = [];
+  // Allow double quotes to not split args.
+  text.split('"').forEach(function(t, i) {
+    t = t.trim();
+    if ((i % 2) === 1) {
+      args.push(t);
+    } else {
+      args = args.concat(t.split(" "));
+    }
+  });
+  return args;
+}
+
+
+function runCommand(text) {
+  if (isReady()) {
+    startRunning();
+    var args = parseArguments(text);
+    console.log(args);
+    worker.postMessage({
+      type: "command",
+      arguments: args,
+      files: [
+        {
+          "name": "input.mp4",
+          "data": data
+        }
+      ]
+    });
+  }
+}
+
+function getDownloadLink(fileData, fileName) {
+  if (fileName.match(/\.jpeg|\.gif|\.jpg|\.png/)) {
+    var blob = new Blob([fileData]);
+    var src = window.URL.createObjectURL(blob);
+    var img = document.createElement('img');
+
+    img.src = src;
+    return img;
+  }
+  else {
+    var a = document.createElement('a');
+    a.download = fileName;
+    var blob = new Blob([fileData]);
+    var src = window.URL.createObjectURL(blob);
+    a.href = src;
+    a.textContent = 'Click here to download ' + fileName + "!";
+    return a;
+  }
+}
+
+function initWorker() {
+  worker = new Worker("worker.js");
+  worker.onmessage = function (event) {
+    var message = event.data;
+    if (message.type == "ready") {
+      isWorkerLoaded = true;
+      worker.postMessage({
+        type: "command",
+        arguments: ["-help"]
+      });
+    } else if (message.type == "stdout") {
+      outputElement.textContent += message.data + "\n";
+    } else if (message.type == "start") {
+      outputElement.textContent = "Worker has received command\n";
+    } else if (message.type == "done") {
+      stopRunning();
+      var buffers = message.data;
+      if (buffers.length) {
+        outputElement.className = "closed";
+      }
+      buffers.forEach(function(file) {
+        filesElement.appendChild(getDownloadLink(file.data, file.name));
+      });
+    }
+  };
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  initWorker();
+  var inputElement = document.querySelector("#input");
+  outputElement = document.querySelector("#output");
+  filesElement = document.querySelector("#files");
+
+  inputElement.addEventListener("keydown", function(e) {
+    if (e.keyCode === 13) {
+      runCommand(inputElement.value);
+    }
+  }, false);
+  document.querySelector("#run").addEventListener("click", function() {
+    runCommand(inputElement.value);
+  });
+});
+
+
+	var start = null;
+	function markStart(){
+		start = Math.round(player.currentTime() * 100) / 100;
+		document.querySelector("#input").value = "-ss " + start;
+	}
+	function markEnd(){
+		if(start){
+			var duration = Math.round((player.currentTime()-start) * 100) / 100;
+			document.querySelector("#input").value += " -t " + duration + " -i input.mp4 -vf scale=320:240 -strict -2 -c:v libx264 -movflags +faststart output.mp4";
+		}
+	}
+
+	var player = null;
+	var data = null;
+	document.addEventListener("DOMContentLoaded", function() {
+		document.getElementById('fileinput').addEventListener('change', function(event){
+			var file = event.target.files[0];
+			var url = URL.createObjectURL(file);
+			document.getElementById('video').src = url;
+
+			if(player === null){
+				player = videojs('video');
+				player.shortcuts({
+					"x": { action: markStart },
+					"y": { action: markEnd }
+				});
+			}
+			
+			var reader = new FileReader();
+			reader.onloadend = function(evt){
+				if(evt.target.readyState == FileReader.DONE){
+					data = new Uint8Array(evt.target.result);
+				}
+			};
+			reader.readAsArrayBuffer(file);
+		}, false);
+	});
+</script>
+
+</body>
+</html>

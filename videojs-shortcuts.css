@@ -1,0 +1,54 @@
+.vjs-centering{
+	position: relative;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+}
+.vjs-centering>*{ /* center horizontally and vertically */
+	position: absolute;
+	margin: 0;
+	top: 50%;
+	left: 50%;
+	margin-right: -50%;
+	transform: translate(-50%, -50%)
+}
+.vjs-control-bar{
+	z-index: 1;
+}
+
+.vjs-outlined{
+	font-size: 30px;
+	color: white;
+	text-shadow:
+		-1px -1px 0 #000,
+		 1px -1px 0 #000,
+		-1px  1px 0 #000,
+		 1px  1px 0 #000;
+}
+.vjs-helpscreen{
+	font-size: 16px;
+	background-color: rgba(0,0,0,.7);
+}
+
+.vjs-osd{
+	opacity: 0;
+	position: absolute;
+	top: 5px;
+	left: 15px;
+}
+.fadeout{
+	opacity: 0;
+	animation: fadeout 2s linear;
+	-webkit-animation: fadeout 2s linear;
+}
+@keyframes fadeout{
+	  0% { opacity: 1; }
+	 75% { opacity: 1; }
+	100% { opacity: 0; }
+}
+@-webkit-keyframes fadeout{
+	  0% { opacity: 1; }
+	 75% { opacity: 1; }
+	100% { opacity: 0; }
+}
