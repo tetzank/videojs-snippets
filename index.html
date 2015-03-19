@@ -252,7 +252,7 @@ document.addEventListener("DOMContentLoaded", function() {
 	function cropClick(event){
 		var video = player.el().querySelector('video');
 		var display = video.getBoundingClientRect(); // use bounding rect instead of player.width/height because of fullscreen
-		var posx = event.clientX - display.x, posy = event.clientY - display.y;
+		var posx = event.clientX - display.left, posy = event.clientY - display.top;
 		var scale = display.width / video.videoWidth;
 		var sh = scale * video.videoHeight;
 		var letterboxH = (display.height - sh) / 2;
@@ -287,7 +287,9 @@ document.addEventListener("DOMContentLoaded", function() {
 				player = videojs('video');
 				player.shortcuts({
 					"x": { action: markStart },
-					"y": { action: markEnd }
+					"U+0058": { action: markStart }, //workaround for chromium
+					"y": { action: markEnd },
+					"U+0059": { action: markEnd }
 				});
 			}
 			
