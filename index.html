@@ -82,6 +82,20 @@
 	<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
 </video>
 
+<div>
+	<ul>
+		<li>start: <span id="start"></span> (press x at the start position)</li>
+		<li>duration: <span id="dur"></span> (press y at the end positon)</li>
+		<li>
+			<button id="btn_crop">crop</button><span id="txt_crop"></span>
+			(click button, then click on the video twice. first top-left and then bottom-right corner of crop area.)
+		</li>
+		<li>scale: <input type="number" id="scalew" placeholder="width" />x<input type="number" id="scaleh" placeholder="height" /></li>
+		<li>audio: <input type="checkbox" id="audio" checked="checked" /></li>
+		<li><button id="btn_gen">generate command</button></li>
+	</ul>
+</div>
+
 <hr/>
 
 <div id="terminal">
@@ -219,20 +233,49 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 });
 
+	var player = null;
 
-	var start = null;
+	var start = null, duration = null;
 	function markStart(){
 		start = Math.round(player.currentTime() * 100) / 100;
-		document.querySelector("#input").value = "-ss " + start;
+		document.getElementById('start').innerHTML = start;
 	}
 	function markEnd(){
 		if(start){
-			var duration = Math.round((player.currentTime()-start) * 100) / 100;
-			document.querySelector("#input").value += " -t " + duration + " -i input.mp4 -vf scale=320:240 -strict -2 -c:v libx264 -movflags +faststart output.mp4";
+			duration = Math.round((player.currentTime()-start) * 100) / 100;
+			document.getElementById('dur').innerHTML = duration;
 		}
 	}
+	
+	var cropFilter = null;
+	var startx=null, starty=null;
+	function cropClick(event){
+		var video = player.el().querySelector('video');
+		var display = video.getBoundingClientRect(); // use bounding rect instead of player.width/height because of fullscreen
+		var posx = event.clientX - display.x, posy = event.clientY - display.y;
+		var scale = display.width / video.videoWidth;
+		var sh = scale * video.videoHeight;
+		var letterboxH = (display.height - sh) / 2;
+		// remove upper bar
+		posy = Math.min(Math.max(posy - letterboxH, 0), sh);
+		// scale up to real size
+		posx /= scale; posy /= scale;
+		posx |= 0; posy |= 0; // get integer
+		console.log("scale: "+ scale +"; x: "+ posx +"; y: "+ posy);
+		if(startx === null){
+			startx = posx;
+			starty = posy;
+		}else{
+			var w = posx - startx, h = posy - starty;
+			cropFilter = "crop="+ w +":"+ h +":"+ startx +":"+ starty;
+			document.getElementById('txt_crop').innerHTML = cropFilter;
+			
+			player.el().querySelector('video').removeEventListener('click', cropClick);
+		}
+		player.pause(); //FIXME: still plays one frame or so
+// 		event.stopPropagation();
+	}
 
-	var player = null;
 	var data = null;
 	document.addEventListener("DOMContentLoaded", function() {
 		document.getElementById('fileinput').addEventListener('change', function(event){
@@ -255,6 +298,39 @@ document.addEventListener("DOMContentLoaded", function() {
 				}
 			};
 			reader.readAsArrayBuffer(file);
+			
+			document.getElementById('btn_crop').addEventListener('click', function(event){
+				var video = player.el().querySelector('video');
+				if(video){
+					video.addEventListener('click', cropClick, false);
+				}
+			}, false);
+			document.getElementById('btn_gen').addEventListener('click', function(event){
+				if(start && duration){
+					var input = document.getElementById('input');
+					input.value = "-ss "+ start +" -t "+ duration +" -i input.mp4";
+					var filter = null;
+					if(cropFilter){
+						filter = cropFilter;
+					}
+					var scalew = document.getElementById('scalew').value;
+					var scaleh = document.getElementById('scaleh').value;
+					if(scalew && scaleh){
+						if(filter){
+							filter += ",scale="+ scalew +":"+ scaleh;
+						}else{
+							filter = "scale="+ scalew +":"+ scaleh;
+						}
+					}
+					if(filter){
+						input.value += " -vf "+ filter;
+					}
+					if(!document.getElementById('audio').checked){
+						input.value += " -an";
+					}
+					input.value += " -strict -2 -c:v libx264 -movflags +faststart output.mp4";
+				}
+			}, false);
 		}, false);
 	});
 </script>
