@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+
+	<title>media recorder of video in canvas</title>
+</head>
+<body>
+
+<p>Choose mp4 files:</p>
+<input type="file" id="files" name="files[]" accept="video/mp4" />
+<hr/>
+
+<button id="crop">start crop selection</button>
+<!-- <input type="number" id="scale" name="scale" value="0.5" /> -->
+<hr/>
+<div id="parent" style="position:relative;">
+	<div style="position:absolute;">
+		<div id="container" style="position:relative;">
+			<video id="video" controls="controls"></video>
+			<div id="cropbox" style="display:flex; position:absolute; border:1px dashed red; color:red;">crop</div>
+		</div>
+	</div>
+</div>
+<hr/>
+<canvas id="canvas"></canvas>
+<hr/>
+<button id="startrec" >Start recording</button>
+<button id="stoprec" >Stop recording</button>
+
+<hr/>
+<div id="download"></div>
+
+
+<script type="application/ecmascript">
+	//<![CDATA[
+	var video = document.getElementById('video');
+	var canvas = document.getElementById('canvas');
+	var canvasStream, directStream;
+	var recorder;
+	var container = document.getElementById('container');
+	var parent = document.getElementById('parent');
+	var cropbox = document.getElementById('cropbox');
+	cropbox.style.visibility = "hidden";
+	var crop_active =false;
+	var mouse_active=false;
+	var sx, sy, sw, sh;
+	var dx, dy, dw, dh;
+	var scale=1;
+
+	document.getElementById('crop').addEventListener('click', function(){
+		crop_active = !crop_active;
+		if(crop_active){
+			this.innerHTML = "stop crop selection";
+		}else{
+			this.innerHTML = "start crop selection"
+
+			// update crop&scale values
+			sx = cropbox.offsetLeft;
+			sy = cropbox.offsetTop;
+			sw = cropbox.offsetWidth;
+			sh = cropbox.offsetHeight;
+			dx = 0; dy = 0;
+			dw=sw*scale |0; dh=sh*scale |0;
+			// update size of canvas
+			canvas.width = dw;
+			canvas.height = dh;
+		}
+	});
+
+	container.addEventListener('mousedown', function(e){
+		if(crop_active){
+			mouse_active = true;
+			var pos = container.getBoundingClientRect();
+			var x = e.clientX - pos.left;
+			var y = e.clientY - pos.top;
+
+			cropbox.style.width = 0;
+			cropbox.style.height = 0;
+			cropbox.style.left = x + "px";
+			cropbox.style.top = y + "px";
+
+			cropbox.style.visibility = "visible";
+		}
+	});
+	container.addEventListener('mousemove', function(e){
+		if(mouse_active){
+			var pos = container.getBoundingClientRect();
+			var x = e.clientX - pos.left;
+			var y = e.clientY - pos.top;
+
+			cropbox.style.width = (x - cropbox.offsetLeft) + "px";
+			cropbox.style.height = (y - cropbox.offsetTop) + "px";
+		}
+	});
+	container.addEventListener('mouseup', function(){
+		mouse_active = false;
+	});
+	container.addEventListener('mouseleave', function(){
+		mouse_active = false;
+	});
+
+
+	var dl;
+	function handleFileSelect(evt) {
+		var file = evt.target.files[0];
+		// load video from file
+		// FIXME: instead of visible DOM-element, document.createElement('video')
+		video.src = URL.createObjectURL(file);
+		video.addEventListener('loadedmetadata', function(){
+			var context = canvas.getContext('2d');
+			// crop & scale test
+			// initially: everything
+			sx=0; sy=0; sw=video.videoWidth; sh=video.videoHeight;
+			dx=0; dy=0; dw=sw; dh=sh;
+			// resize canvas
+			canvas.width = dw;
+			canvas.height = dh;
+			parent.style.width = video.videoWidth + "px";
+			parent.style.height = video.videoHeight + "px";
+			// draw video to canvas
+			// use requestAnimationFrame to render the video as often as possible
+			var draw = function(){
+				// schedule next call to this function
+				requestAnimationFrame(draw);
+				// draw video data into the canvas
+				context.drawImage(video, sx, sy, sw, sh, dx, dy, dw, dh);
+			};
+			// Start the animation loop
+			requestAnimationFrame(draw);
+
+			// edit video in canvas, get stream of edited video
+			canvasStream = canvas.captureStream(15);
+			// audio has to play and be recorded, done in audio API
+			var audioContext = new AudioContext();
+			//FIXME: use standard video.captureStream() when implemented
+			//FIXME: check for support now, and use what's possible
+			var sourceNode = audioContext.createMediaStreamSource(
+				video.mozCaptureStream(15) //FIXME: firefox specific
+			);
+			sourceNode.connect(audioContext.destination); //let it play unchanged
+			var streamDestination = audioContext.createMediaStreamDestination();
+			sourceNode.connect(streamDestination); //copy audio for capture
+			directStream = streamDestination.stream;
+			// create one stream out of edited video and audio
+			var stream = new MediaStream();
+			stream.addTrack(canvasStream.getVideoTracks()[0]);
+			stream.addTrack(directStream.getAudioTracks()[0]);
+			// recorder with constant(?) bitrate
+			recorder = new MediaRecorder(stream, {'videoBitsPerSecond': 1000000});
+			recorder.addEventListener('dataavailable', function(e){
+				var videoData = [ e.data ];
+				var blob = new Blob(videoData, { 'type': 'video/webm'});
+				var videoURL = URL.createObjectURL(blob);
+				// display download link
+				var fname = "test.webm";
+				var a = document.createElement('a');
+				a.download = fname;
+				a.href = videoURL;
+				a.textContent = 'Click here to download ' + fname + "!";
+				if(dl){
+					document.getElementById('download').replaceChild(a, dl);
+				}else{
+					document.getElementById('download').appendChild(a);
+				}
+				dl = a;
+			});
+		});
+		// we need to play the video to trigger the loadedmetadata event
+		video.play();
+	}
+	document.getElementById('files').addEventListener('change', handleFileSelect, false);
+
+	document.getElementById('startrec').addEventListener('click', function(){
+		recorder.start();
+		video.play();
+	});
+	document.getElementById('stoprec').addEventListener('click', function(){
+		recorder.stop();
+		video.pause();
+	});
+
+	//]]>
+</script>
+
+</body>
+</html>
