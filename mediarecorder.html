@@ -7,12 +7,32 @@
 </head>
 <body>
 
+<p>Only works in Firefox</p>
+<ol>
+	<li>Choose a local mp4 file</li>
+	<li>Optionally:
+		Make a crop selection by clicking on the button and dragging a box on
+		the video. Finish your selection by clicking the button again.
+	</li>
+	<li>
+		Seek the video to the start position where the recording should start.
+	</li>
+	<li>
+		Start recording by clicking the button. This will play the video in
+		real time. Stop recording by clicking the button again.
+	</li>
+	<li>
+		A download link will appear at the bottom of the page. Left click it.
+	</li>
+</ol>
+
 <p>Choose mp4 files:</p>
 <input type="file" id="files" name="files[]" accept="video/mp4" />
 <hr/>
 
-<button id="crop">start crop selection</button>
+<button id="crop" disabled>start crop selection</button>
 <!-- <input type="number" id="scale" name="scale" value="0.5" /> -->
+<button id="btnrec" disabled>Start recording</button>
 <hr/>
 <div id="parent" style="position:relative;">
 	<div style="position:absolute;">
@@ -22,11 +42,6 @@
 		</div>
 	</div>
 </div>
-<hr/>
-<canvas id="canvas"></canvas>
-<hr/>
-<button id="startrec" >Start recording</button>
-<button id="stoprec" >Stop recording</button>
 
 <hr/>
 <div id="download"></div>
@@ -35,13 +50,14 @@
 <script type="application/ecmascript">
 	//<![CDATA[
 	var video = document.getElementById('video');
-	var canvas = document.getElementById('canvas');
+	var canvas = document.createElement('canvas');
 	var canvasStream, directStream;
 	var recorder;
 	var container = document.getElementById('container');
 	var parent = document.getElementById('parent');
 	var cropbox = document.getElementById('cropbox');
 	cropbox.style.visibility = "hidden";
+	var recording = false;
 	var crop_active =false;
 	var mouse_active=false;
 	var sx, sy, sw, sh;
@@ -51,8 +67,10 @@
 	document.getElementById('crop').addEventListener('click', function(){
 		crop_active = !crop_active;
 		if(crop_active){
+			document.getElementById('btnrec').disabled = true;
 			this.innerHTML = "stop crop selection";
 		}else{
+			document.getElementById('btnrec').disabled = false;
 			this.innerHTML = "start crop selection"
 
 			// update crop&scale values
@@ -105,9 +123,11 @@
 	function handleFileSelect(evt) {
 		var file = evt.target.files[0];
 		// load video from file
-		// FIXME: instead of visible DOM-element, document.createElement('video')
 		video.src = URL.createObjectURL(file);
 		video.addEventListener('loadedmetadata', function(){
+			// enable buttons
+			document.getElementById('crop').disabled = false;
+			document.getElementById('btnrec').disabled = false;
 			var context = canvas.getContext('2d');
 			// crop & scale test
 			// initially: everything
@@ -171,15 +191,20 @@
 	}
 	document.getElementById('files').addEventListener('change', handleFileSelect, false);
 
-	document.getElementById('startrec').addEventListener('click', function(){
-		recorder.start();
-		video.play();
+	document.getElementById('btnrec').addEventListener('click', function(){
+		recording = !recording;
+		if(recording){
+			document.getElementById('crop').disabled = true;
+			this.innerHTML = "stop recording";
+			recorder.start();
+			video.play();
+		}else{
+			document.getElementById('crop').disabled = false;
+			this.innerHTML = "start recording";
+			recorder.stop();
+			video.pause();
+		}
 	});
-	document.getElementById('stoprec').addEventListener('click', function(){
-		recorder.stop();
-		video.pause();
-	});
-
 	//]]>
 </script>
 
