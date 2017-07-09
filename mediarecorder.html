@@ -7,7 +7,7 @@
 </head>
 <body>
 
-<p>Only works in Firefox</p>
+<p>Use Firefox, otherwise audio is not captured</p>
 <ol>
 	<li>Choose a local mp4 file</li>
 	<li>Optionally:
@@ -151,21 +151,29 @@
 
 			// edit video in canvas, get stream of edited video
 			canvasStream = canvas.captureStream(15);
-			// audio has to play and be recorded, done in audio API
-			var audioContext = new AudioContext();
-			//FIXME: use standard video.captureStream() when implemented
-			//FIXME: check for support now, and use what's possible
-			var sourceNode = audioContext.createMediaStreamSource(
-				video.mozCaptureStream(15) //FIXME: firefox specific
-			);
-			sourceNode.connect(audioContext.destination); //let it play unchanged
-			var streamDestination = audioContext.createMediaStreamDestination();
-			sourceNode.connect(streamDestination); //copy audio for capture
-			directStream = streamDestination.stream;
-			// create one stream out of edited video and audio
+
+			// create one stream out of edited video and audio later if available
 			var stream = new MediaStream();
 			stream.addTrack(canvasStream.getVideoTracks()[0]);
-			stream.addTrack(directStream.getAudioTracks()[0]);
+
+			if(video.captureStream || video.mozCaptureStream){
+				// audio has to play and be recorded, done in audio API
+				var audioContext = new AudioContext();
+				// use standard video.captureStream() when implemented
+				// check for support now, and use what's possible
+				video.captureStream = video.captureStream || video.mozCaptureStream;
+				var sourceNode = audioContext.createMediaStreamSource(
+					//video.mozCaptureStream(15) // firefox specific
+					video.captureStream(15)
+				);
+				sourceNode.connect(audioContext.destination); //let it play unchanged
+				var streamDestination = audioContext.createMediaStreamDestination();
+				sourceNode.connect(streamDestination); //copy audio for capture
+				directStream = streamDestination.stream;
+
+				stream.addTrack(directStream.getAudioTracks()[0]);
+			}
+
 			// recorder with constant(?) bitrate
 			recorder = new MediaRecorder(stream, {'videoBitsPerSecond': 1000000});
 			recorder.addEventListener('dataavailable', function(e){
