@@ -1,0 +1,30 @@
+.vjs-snippet-ctrl{
+	.vjs-control{
+		cursor: pointer;
+	}
+	&>.vjs-button{
+		display: flex;
+		justify-content: center; /* align horizontal */
+		align-items: center; /* align vertical */
+
+		&:hover{
+			text-shadow: 0 0 1em white;
+		}
+	}
+}
+
+.vjs-default-skin{
+	.vjs-snippet-button{
+		@extend %icon_video;
+		float: right;
+		cursor: pointer;
+	}
+
+	.vjs-snippet-crop { @extend %icon_slice; }
+	.vjs-snippet-clap { @extend %icon_clapper; }
+
+	.vjs-snippet-close{
+		@extend %icon_close;
+		float: right;
+	}
+}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+
+	<title>media recorder of video in canvas</title>
+
+	<link href="http://vjs.zencdn.net/4.12/video-js.css" rel="stylesheet">
+	<script src="http://vjs.zencdn.net/4.12/video.js"></script>
+
+	<link href="./build/videojs-snippets.css" rel="stylesheet" type="text/css"/>
+	<script src="./build/videojs-snippets.js"></script>
+</head>
+<body>
+
+<p>Use Firefox, otherwise audio is not captured</p>
+<ol>
+	<li>Choose a local mp4 file</li>
+	<li>Optionally:
+		Make a crop selection by clicking on the button and dragging a box on
+		the video. Finish your selection by clicking the button again.
+	</li>
+	<li>
+		Seek the video to the start position where the recording should start.
+	</li>
+	<li>
+		Start recording by clicking the button. This will play the video in
+		real time. Stop recording by clicking the button again.
+	</li>
+	<li>
+		A download link will appear at the bottom of the page. Left click it.
+	</li>
+</ol>
+
+<p>Choose mp4 files:</p>
+<input type="file" id="files" name="files[]" accept="video/mp4" />
+<hr/>
+
+<video id="example_video_1" class="video-js vjs-default-skin vjs-big-play-centered" controls="controls" preload="auto" width="640" height="480">
+	<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
+</video>
+
+
+<script type="application/ecmascript">
+	var player = videojs('example_video_1');
+	player.snippets();
+	
+	document.getElementById('files').addEventListener('change', function(event){
+		var file = event.target.files[0];
+		player.src({ type: "video/mp4", src: URL.createObjectURL(file)});
+	}, false);
+</script>
+
+</body>
+</html>
