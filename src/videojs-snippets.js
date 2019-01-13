@@ -6,12 +6,22 @@ function snippets(options){
 	var video = player.el().querySelector('video');
 	// hidden canvas for cropping and resizing
 	var canvas = document.createElement('canvas');
+	var context = canvas.getContext('2d');
 	// globals for cropping and resizing
 	var sx, sy, sw, sh;
 	var dx, dy, dw, dh;
 	var scale=1;
 	var recorder;
 	var recording=false; // recording flag, currently recording?
+
+	// draw video to canvas
+	// use requestAnimationFrame to render the video as often as possible
+	var drawToCanvas = function(){
+		// schedule next call to this function
+		if(recording) requestAnimationFrame(drawToCanvas);
+		// draw video data into the canvas
+		context.drawImage(video, sx, sy, sw, sh, dx, dy, dw, dh);
+	};
 
 	// switch to recording
 	// added to player object to be callable from outside, e.g. shortcut
@@ -20,10 +30,9 @@ function snippets(options){
 		// loose keyboard focus
 		player.el().blur();
 		// switch control bar to recording controls
-		player.controlBar.hide();
+		player.controlBar.hide(); //FIXME: also disables progress bar, need copy or something for seeking
 		recordCtrl.show();
 		
-		var context = canvas.getContext('2d');
 		// crop & scale test
 		// initially: everything
 		sx=0; sy=0; sw=video.videoWidth; sh=video.videoHeight;
@@ -32,17 +41,6 @@ function snippets(options){
 		canvas.width = dw;
 		canvas.height = dh;
 		//TODO: cropping
-
-		// draw video to canvas
-		// use requestAnimationFrame to render the video as often as possible
-		var draw = function(){
-			// schedule next call to this function
-			/*if(recording)*/ requestAnimationFrame(draw);
-			// draw video data into the canvas
-			context.drawImage(video, sx, sy, sw, sh, dx, dy, dw, dh);
-		};
-		// Start the animation loop
-		requestAnimationFrame(draw);
 
 		// edit video in canvas, get stream of edited video
 		var canvasStream = canvas.captureStream(15);
@@ -77,16 +75,6 @@ function snippets(options){
 			var videoURL = URL.createObjectURL(blob);
 			// display download link
 			var fname = "test.webm";
-			/*var a = document.createElement('a');
-			a.download = fname;
-			a.href = videoURL;
-			a.textContent = 'Click here to download ' + fname + "!";
-			if(dl){
-				document.getElementById('download').replaceChild(a, dl);
-			}else{
-				document.getElementById('download').appendChild(a);
-			}
-			dl = a;*/
 			// open a new window with a download link
 			var dlWindow = window.open("");
 			dlWindow.document.write('<html><head><title>snippet</title></head><body><p>Save video</p><a download="'+fname+'" href="'+videoURL+'">Download</a></body></html>');
@@ -111,9 +99,9 @@ function snippets(options){
 	//TODO: resize
 
 	// crop selection - only record selected area, crop rest
-	var crop = recordCtrl.addChild('button');
-	crop.addClass("vjs-snippet-crop");
-	crop.el().title = "crop video";
+	//var crop = recordCtrl.addChild('button');
+	//crop.addClass("vjs-snippet-crop");
+	//crop.el().title = "crop video";
 	//TODO
 	
 	// start/stop recording
@@ -124,12 +112,20 @@ function snippets(options){
 	clap.on('click', function(){
 		recording = !recording;
 		if(recording){
+			// start the animation loop
+			requestAnimationFrame(drawToCanvas);
 			//document.getElementById('crop').disabled = true;
+			// indicate recording
+			clap.el().style.color = "red";
 			//this.innerHTML = "stop recording";
+			// start recording
 			recorder.start();
+			// start video
 			video.play();
 		}else{
 			//document.getElementById('crop').disabled = false;
+			// indicate stopped recording
+			clap.el().style.color = "inherit";
 			//this.innerHTML = "start recording";
 			recorder.stop();
 			video.pause();
