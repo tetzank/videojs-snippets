@@ -4,6 +4,7 @@ function snippets(options){
 	// globals
 	var player = this;
 	var video = player.el().querySelector('video');
+	var dl_link;
 	// hidden canvas for cropping and resizing
 	var canvas = document.createElement('canvas');
 	var context = canvas.getContext('2d');
@@ -75,9 +76,10 @@ function snippets(options){
 			var videoURL = URL.createObjectURL(blob);
 			// display download link
 			var fname = "test.webm";
-			// open a new window with a download link
-			var dlWindow = window.open("");
-			dlWindow.document.write('<html><head><title>snippet</title></head><body><p>Save video</p><a download="'+fname+'" href="'+videoURL+'">Download</a></body></html>');
+			// show download button
+			dl_link.el().href = videoURL;
+			dl_link.el().download = fname;
+			dl_link.show();
 		});
 	};
 	// icon on normal player control bar
@@ -108,7 +110,6 @@ function snippets(options){
 	var clap = recordCtrl.addChild('button');
 	clap.addClass("vjs-snippet-clap");
 	clap.el().title = "start/stop recording";
-	//TODO
 	clap.on('click', function(){
 		recording = !recording;
 		if(recording){
@@ -132,6 +133,17 @@ function snippets(options){
 		}
 	});
 
+	dl_link = recordCtrl.addChild(
+		new videojs.Component(player, {
+			el: videojs.Component.prototype.createEl('a', {
+				className: 'vjs-control vjs-snippet-download',
+				title: 'Download',
+				style: 'color: inherit'
+			})
+		})
+	);
+	dl_link.hide();
+
 	// close button leading back to normal video play back
 	var close = recordCtrl.addChild('button');
 	close.addClass("vjs-snippet-close");
@@ -139,6 +151,7 @@ function snippets(options){
 	close.on('click', function(){
 		// switch back to normal player controls
 		recordCtrl.hide();
+		dl_link.hide();
 		player.controlBar.show();
 		player.el().focus();
 	});
