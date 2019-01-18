@@ -131,10 +131,6 @@ function snippets(options){
 	//TODO: resize
 
 	// crop selection - only record selected area, crop rest
-	var crop = recordCtrl.addChild('button');
-	crop.addClass("vjs-snippet-crop");
-	crop.el().title = "crop video";
-
 	var cropbox = container.addChild(
 		new videojs.Component(player, {
 			el: videojs.Component.prototype.createEl('div', {
@@ -146,46 +142,37 @@ function snippets(options){
 	cropbox.el().style.display = "flex";
 	cropbox.hide();
 
-	crop.on('click', function(){
-		cropping = !cropping;
-		crop.el().classList.toggle('vjs-crop-active');
-		if(cropping){
-			cropbox.show();
-			//player.disable();
-		}else{
-			// update crop&scale values
-			sx = cropbox.el().offsetLeft;
-			sy = cropbox.el().offsetTop;
-			sw = cropbox.el().offsetWidth;
-			sh = cropbox.el().offsetHeight;
-			dx = 0; dy = 0;
-			dw=sw*scale |0; dh=sh*scale |0;
-			// update size of canvas
-			canvas.el().width = dw;
-			canvas.el().height = dh;
-			// draw video data into the canvas
-			context.drawImage(video, sx, sy, sw, sh, dx, dy, dw, dh);
+	cropbox.on('mousedown', function(e){
+		// update crop&scale values
+		sx = cropbox.el().offsetLeft;
+		sy = cropbox.el().offsetTop;
+		sw = cropbox.el().offsetWidth;
+		sh = cropbox.el().offsetHeight;
+		dx = 0; dy = 0;
+		dw=sw*scale |0; dh=sh*scale |0;
+		// update size of canvas
+		canvas.el().width = dw;
+		canvas.el().height = dh;
+		// draw video data into the canvas
+		context.drawImage(video, sx, sy, sw, sh, dx, dy, dw, dh);
 
-			cropbox.hide();
-		}
+		cropbox.hide();
+		e.stopPropagation(); //otherwise container gets mousedown as well
 	});
+
 	container.on('mousedown', function(e){
-		if(cropping){
-			console.log('mousedown fired');
-			var pos = player.el().getBoundingClientRect();
-			var x = e.clientX - pos.left;
-			var y = e.clientY - pos.top;
+		cropbox.show();
+		console.log('mousedown fired');
+		var pos = player.el().getBoundingClientRect();
+		var x = e.clientX - pos.left;
+		var y = e.clientY - pos.top;
 
-			cropbox.el().style.width = 0;
-			cropbox.el().style.height = 0;
-			cropbox.el().style.left = x + "px";
-			cropbox.el().style.top = y + "px";
+		cropbox.el().style.width = 0;
+		cropbox.el().style.height = 0;
+		cropbox.el().style.left = x + "px";
+		cropbox.el().style.top = y + "px";
 
-			//cropbox.el().style.visibility = "visible";
-			mousing = true;
-			//e.preventDefault();
-			//e.stopPropagation();
-		}
+		mousing = true;
 	});
 	container.on('mousemove', function(e){
 		if(mousing){
