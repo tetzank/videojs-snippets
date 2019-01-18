@@ -7,8 +7,6 @@ function snippets(options){
 	var dl_link;
 	// hidden canvas for cropping and resizing
 	var container, canvas, context;
-	//var canvas = document.createElement('canvas');
-	//var context = canvas.getContext('2d');
 	// globals for cropping and resizing
 	var sx, sy, sw, sh;
 	var dx, dy, dw, dh;
@@ -155,21 +153,22 @@ function snippets(options){
 			cropbox.show();
 			//player.disable();
 		}else{
-			cropbox.hide();
 			// update crop&scale values
-			sx = cropbox.offsetLeft;
-			sy = cropbox.offsetTop;
-			sw = cropbox.offsetWidth;
-			sh = cropbox.offsetHeight;
+			sx = cropbox.el().offsetLeft;
+			sy = cropbox.el().offsetTop;
+			sw = cropbox.el().offsetWidth;
+			sh = cropbox.el().offsetHeight;
 			dx = 0; dy = 0;
 			dw=sw*scale |0; dh=sh*scale |0;
 			// update size of canvas
 			canvas.el().width = dw;
 			canvas.el().height = dh;
+			// draw video data into the canvas
+			context.drawImage(video, sx, sy, sw, sh, dx, dy, dw, dh);
+
+			cropbox.hide();
 		}
 	});
-	//player.on('mousedown', function(e){
-	//video.addEventListener('mousedown', function(e){
 	container.on('mousedown', function(e){
 		if(cropping){
 			console.log('mousedown fired');
@@ -188,7 +187,6 @@ function snippets(options){
 			//e.stopPropagation();
 		}
 	});
-	//player.on('mousemove', function(e){
 	container.on('mousemove', function(e){
 		if(mousing){
 			console.log('mousemove fired');
@@ -196,17 +194,15 @@ function snippets(options){
 			var x = e.clientX - pos.left;
 			var y = e.clientY - pos.top;
 
-			cropbox.el().style.width = (x - cropbox.offsetLeft) + "px";
-			cropbox.el().style.height = (y - cropbox.offsetTop) + "px";
+			cropbox.el().style.width = (x - cropbox.el().offsetLeft) + "px";
+			cropbox.el().style.height = (y - cropbox.el().offsetTop) + "px";
 			e.preventDefault();
 		}
 	});
-	//player.on('mouseup', function(){
 	container.on('mouseup', function(){
 		console.log('mouseup fired');
 		mousing = false;
 	});
-	//player.on('mouseleave', function(){
 	container.on('mouseleave', function(){
 		console.log('mouseleave fired');
 		mousing = false;

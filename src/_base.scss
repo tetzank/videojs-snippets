@@ -14,6 +14,8 @@
 .vjs-canvas-cropbox{
 	display: flex;
 	position: absolute;
+	justify-content: center; /* align horizontal */
+	align-items: center; /* align vertical */
 	border: 1px dashed red;
 	color: red;
 	text-shadow:
