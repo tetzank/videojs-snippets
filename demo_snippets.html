@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+
+	<title>media recorder of video in canvas</title>
+
+	<link href="http://vjs.zencdn.net/4.12/video-js.css" rel="stylesheet">
+	<script src="http://vjs.zencdn.net/4.12/video.js"></script>
+
+	<link href="./videojs-snippets.css" rel="stylesheet" type="text/css"/>
+	<script src="./videojs-snippets.js"></script>
+</head>
+<body>
+
+<p>A modern and recent browser is required.</p>
+<ol>
+	<li>Choose a local video file.</li>
+	<li>
+		Seek the video to the start position where the recording should start.
+	</li>
+	<li>Click the projector icon at the bottom right to switch to the recording controls.</li>
+	<li>Optionally:
+		Make a crop selection by dragging a box on the video, from top left to bottom right.
+		Finish your selection by clicking on the box.
+	</li>
+	<li>
+		Start recording by clicking the recording button. This will play the video in
+		real time. Stop recording by clicking the button again.
+	</li>
+	<li>
+		A download button will appear next to the recording button. Left click it.
+	</li>
+</ol>
+
+
+
+<p>Choose video file:</p>
+<input type="file" id="files" name="files[]" accept="video/mp4" />
+<hr/>
+
+<video id="example_video_1" class="video-js vjs-default-skin vjs-big-play-centered" controls="controls" preload="auto" width="640" height="480">
+	<p class="vjs-no-js">To view this video please enable JavaScript, and consider upgrading to a web browser that <a href="http://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a></p>
+</video>
+
+
+<script type="application/ecmascript">
+	var player = videojs('example_video_1');
+	player.snippets();
+	
+	document.getElementById('files').addEventListener('change', function(event){
+		var file = event.target.files[0];
+		player.src({ type: "video/mp4", src: URL.createObjectURL(file)});
+	}, false);
+</script>
+
+<hr/>
+<p>Known problems:</p>
+<ul>
+	<li>Firefox: Crop selection shifted when video has aspect ratio (SAR) which is not 1:1 and is bigger than the player.</li>
+	<li>Chromium: Audio has weird echo when recording, probably played back twice. Recording file is fine, though.</li>
+</ul>
+
+</body>
+</html>

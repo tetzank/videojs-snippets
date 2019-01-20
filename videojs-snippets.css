@@ -1,0 +1,80 @@
+@charset "UTF-8";
+@font-face {
+  font-family: "VideoJSSnippets";
+  src: url("data:application/x-font-woff;charset=utf-8;base64,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") format("woff");
+  font-weight: normal;
+  font-style: normal; }
+.vjs-default-skin .vjs-snippet-clap::before, .vjs-default-skin .vjs-snippet-close::before, .vjs-default-skin .vjs-snippet-download::before, .vjs-default-skin .vjs-snippet-crop::before, .vjs-default-skin .vjs-snippet-button::before {
+  font-family: "VideoJSSnippets";
+  font-size: 3em;
+  line-height: 1; }
+
+.vjs-default-skin .vjs-snippet-clap::before {
+  content: ""; }
+
+.vjs-default-skin .vjs-snippet-close::before {
+  content: ""; }
+
+.vjs-default-skin .vjs-snippet-download::before {
+  content: ""; }
+
+.vjs-default-skin .vjs-snippet-crop::before {
+  content: ""; }
+
+.vjs-default-skin .vjs-snippet-button::before {
+  content: ""; }
+
+.vjs-canvas-parent {
+  background-color: white;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  /* otherwise its video gets through somehow */ }
+
+.vjs-canvas-container {
+  position: relative; }
+  .vjs-canvas-container canvas {
+    position: absolute; }
+
+.vjs-canvas-cropbox {
+  display: flex;
+  position: absolute;
+  justify-content: center;
+  /* align horizontal */
+  align-items: center;
+  /* align vertical */
+  border: 1px dashed red;
+  color: red;
+  font-weight: bold;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px  1px 0 #000, 1px  1px 0 #000;
+  cursor: pointer; }
+
+.vjs-snippet-ctrl {
+  visibility: visible !important;
+  opacity: 1 !important; }
+  .vjs-snippet-ctrl .vjs-control {
+    cursor: pointer; }
+  .vjs-snippet-ctrl > .vjs-button {
+    display: flex;
+    justify-content: center;
+    /* align horizontal */
+    align-items: center;
+    /* align vertical */ }
+    .vjs-snippet-ctrl > .vjs-button:hover {
+      text-shadow: 0 0 1em white; }
+  .vjs-snippet-ctrl > .vjs-scale {
+    display: flex;
+    justify-content: center;
+    /* align horizontal */
+    align-items: center;
+    /* align vertical */
+    position: relative;
+    height: 3em;
+    width: 4em;
+    float: right; }
+
+.vjs-default-skin .vjs-snippet-button {
+  float: right;
+  cursor: pointer; }
+.vjs-default-skin .vjs-snippet-close {
+  float: right; }
