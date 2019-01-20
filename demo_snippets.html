@@ -13,27 +13,29 @@
 </head>
 <body>
 
-<p>A modern and recent browser is required</p>
+<p>A modern and recent browser is required.</p>
 <ol>
-	<li>Choose a local mp4 file</li>
+	<li>Choose a local video file.</li>
 	<li>
 		Seek the video to the start position where the recording should start.
 	</li>
-	<li>Click the projector icon at the bottom right to switch to recording controls.</li>
+	<li>Click the projector icon at the bottom right to switch to the recording controls.</li>
 	<li>Optionally:
-		Make a crop selection by clicking on the button and dragging a box on
-		the video. Finish your selection by clicking the button again.
+		Make a crop selection by dragging a box on the video, from top left to bottom right.
+		Finish your selection by clicking on the box.
 	</li>
 	<li>
-		Start recording by clicking the clap button. This will play the video in
+		Start recording by clicking the recording button. This will play the video in
 		real time. Stop recording by clicking the button again.
 	</li>
 	<li>
-		A download link will appear in a new window. Left click it.
+		A download button will appear next to the recording button. Left click it.
 	</li>
 </ol>
 
-<p>Choose mp4 files:</p>
+
+
+<p>Choose video file:</p>
 <input type="file" id="files" name="files[]" accept="video/mp4" />
 <hr/>
 
@@ -51,6 +53,13 @@
 		player.src({ type: "video/mp4", src: URL.createObjectURL(file)});
 	}, false);
 </script>
+
+<hr/>
+<p>Known problems:</p>
+<ul>
+	<li>Firefox: Crop selection shifted when video has aspect ratio (SAR) which is not 1:1 and is bigger than the player.</li>
+	<li>Chromium: Audio has weird echo when recording, probably played back twice. Recording file is fine, though.</li>
+</ul>
 
 </body>
 </html>
