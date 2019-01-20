@@ -26,9 +26,6 @@
 		 1px  1px 0 #000;
 	cursor: pointer;
 }
-.vjs-crop-active{
-	color: green;
-}
 
 .vjs-snippet-ctrl{
 	visibility: visible !important;
@@ -45,6 +42,15 @@
 		&:hover{
 			text-shadow: 0 0 1em white;
 		}
+	}
+	&>.vjs-scale{
+		display: flex;
+		justify-content: center; /* align horizontal */
+		align-items: center; /* align vertical */
+		position: relative;
+		height: 3em;
+		width: 4em;
+		float: right;
 	}
 }
 

@@ -25,6 +25,14 @@ function snippets(options){
 		context.drawImage(video, sx, sy, sw, sh, dx, dy, dw, dh);
 	};
 
+	function updateScale(){
+		var rect = video.getBoundingClientRect();
+		var scalew = canvas.el().width / rect.width;
+		var scaleh = canvas.el().height / rect.height;
+		scale = Math.max(Math.max(scalew, scaleh), 1);
+		scale_txt.el().innerHTML = (Math.round(1/scale*100)/100) +"x";
+	}
+
 	// switch to recording
 	// added to player object to be callable from outside, e.g. shortcut
 	player.snippet = function(){
@@ -44,8 +52,15 @@ function snippets(options){
 		// resize canvas
 		canvas.el().width = dw;
 		canvas.el().height = dh;
+		// calculate scale
+		updateScale();
+		// still fit into player element
+		var rect = video.getBoundingClientRect(); // use bounding rect instead of player.width/height because of fullscreen
+		canvas.el().style.maxWidth  = rect.width  +"px";
+		canvas.el().style.maxHeight = rect.height +"px";
 		// draw video data into the canvas
 		context.drawImage(video, sx, sy, sw, sh, dx, dy, dw, dh);
+		//context.drawImage(video, 0, 0);
 
 		// edit video in canvas, get stream of edited video
 		var canvasStream = canvas.el().captureStream(15);
@@ -97,7 +112,7 @@ function snippets(options){
 	var parent = player.addChild(
 		new videojs.Component(player, {
 			el: videojs.Component.prototype.createEl(null, {
-				className: 'vjs-canvas-parent' /*TODO*/
+				className: 'vjs-canvas-parent'
 			}),
 		})
 	);
@@ -105,7 +120,7 @@ function snippets(options){
 	container = parent.addChild(
 		new videojs.Component(player, {
 			el: videojs.Component.prototype.createEl(null, {
-				className: 'vjs-canvas-container' /*TODO*/
+				className: 'vjs-canvas-container'
 			}),
 		})
 	);
@@ -128,7 +143,10 @@ function snippets(options){
 	);
 	recordCtrl.hide();
 
+	//TODO: seeking: play button (just play, don't record) + progress bar
 	//TODO: resize
+	//TODO: firefox: cropping shifted
+	//TODO: chromium: audio twice when recording
 
 	// crop selection - only record selected area, crop rest
 	var cropbox = container.addChild(
@@ -139,20 +157,22 @@ function snippets(options){
 			}),
 		})
 	);
-	cropbox.el().style.display = "flex";
 	cropbox.hide();
 
+	//FIXME: cropping from scaled down videos is shifted
 	cropbox.on('mousedown', function(e){
 		// update crop&scale values
-		sx = cropbox.el().offsetLeft;
-		sy = cropbox.el().offsetTop;
-		sw = cropbox.el().offsetWidth;
-		sh = cropbox.el().offsetHeight;
+		sx += scale * cropbox.el().offsetLeft  |0;
+		sy += scale * cropbox.el().offsetTop   |0;
+		sw  = scale * cropbox.el().offsetWidth |0;
+		sh  = scale * cropbox.el().offsetHeight|0;
 		dx = 0; dy = 0;
-		dw=sw*scale |0; dh=sh*scale |0;
+		dw=sw/**scale*/ |0; dh=sh/**scale*/ |0;
 		// update size of canvas
 		canvas.el().width = dw;
 		canvas.el().height = dh;
+		// recalculate scale
+		updateScale();
 		// draw video data into the canvas
 		context.drawImage(video, sx, sy, sw, sh, dx, dy, dw, dh);
 
@@ -162,7 +182,6 @@ function snippets(options){
 
 	container.on('mousedown', function(e){
 		cropbox.show();
-		console.log('mousedown fired');
 		var pos = player.el().getBoundingClientRect();
 		var x = e.clientX - pos.left;
 		var y = e.clientY - pos.top;
@@ -176,7 +195,6 @@ function snippets(options){
 	});
 	container.on('mousemove', function(e){
 		if(mousing){
-			console.log('mousemove fired');
 			var pos = container.el().getBoundingClientRect();
 			var x = e.clientX - pos.left;
 			var y = e.clientY - pos.top;
@@ -187,11 +205,9 @@ function snippets(options){
 		}
 	});
 	container.on('mouseup', function(){
-		console.log('mouseup fired');
 		mousing = false;
 	});
 	container.on('mouseleave', function(){
-		console.log('mouseleave fired');
 		mousing = false;
 	});
 	
@@ -204,7 +220,6 @@ function snippets(options){
 		if(recording){
 			// start the animation loop
 			requestAnimationFrame(drawToCanvas);
-			//document.getElementById('crop').disabled = true;
 			// indicate recording
 			clap.el().style.color = "red";
 			//this.innerHTML = "stop recording";
@@ -213,7 +228,6 @@ function snippets(options){
 			// start video
 			video.play();
 		}else{
-			//document.getElementById('crop').disabled = false;
 			// indicate stopped recording
 			clap.el().style.color = "inherit";
 			//this.innerHTML = "start recording";
@@ -247,6 +261,15 @@ function snippets(options){
 		player.controlBar.show();
 		player.el().focus();
 	});
+
+	// scale display
+	var scale_txt = recordCtrl.addChild(
+		new videojs.Component(player, {
+			el: videojs.Component.prototype.createEl(null, {
+				className: 'vjs-scale', innerHTML: '1', title: 'scale factor'
+			}),
+		})
+	);
 }
 
 videojs.plugin('snippets', snippets);
